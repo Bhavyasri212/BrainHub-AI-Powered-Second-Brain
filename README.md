@@ -488,7 +488,7 @@ This project is licensed under the **MIT License** – see the LICENSE file for 
 
 - **Issues:** GitHub Issues
 - **Discussions:** GitHub Discussions
-- **Email:** [Your contact email]
+- **Email:** bhavyasrireddysudhini21@gmail.com
 
 ---
 

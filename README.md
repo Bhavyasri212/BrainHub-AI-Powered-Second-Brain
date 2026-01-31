@@ -269,7 +269,7 @@ knowledgevault/
 
 ### Knowledge Management
 
-**POST `/api/knowledge`** – Create new knowledge item
+### POST `/api/knowledge`\*\* – Create new knowledge item
 
 ```
 curl -X POST http://localhost:3000/api/knowledge \

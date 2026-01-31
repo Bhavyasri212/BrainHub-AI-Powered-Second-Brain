@@ -152,7 +152,7 @@ export default function Docs() {
         {/* Content Tabs */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
           {/* Sidebar Navigation */}
-          <div className="lg:col-span-3 grid grid-cols-2 sm:grid-cols-4 lg:flex lg:flex-col gap-2 lg:space-y-2 sticky top-24 self-start mb-8 lg:mb-0">
+          <div className="lg:col-span-3 grid grid-cols-2 sm:grid-cols-4 lg:flex lg:flex-col gap-2 lg:sticky lg:top-24 self-start mb-8 lg:mb-0">
             {[
               { id: "portable", icon: Box, label: "Portable Architecture" },
               { id: "ux", icon: Layers, label: "Principles-Based UX" },

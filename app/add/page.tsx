@@ -455,7 +455,7 @@ export default function AddKnowledgePage() {
                     </>
                   ) : (
                     <>
-                      <Eye className="w-5 h-5" />
+                      <Eye className="w-4 h-4 sm:w-5 sm:h-5" />
                       Analyze & Review
                     </>
                   )}

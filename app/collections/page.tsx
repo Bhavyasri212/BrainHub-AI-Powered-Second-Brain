@@ -27,7 +27,6 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { KnowledgeItem } from "../types";
 
-// Skeleton Loader Component
 const CardSkeleton = () => (
   <div className="rounded-2xl p-6 bg-[#141414] border border-[#262626] animate-pulse h-64 flex flex-col justify-between">
     <div className="space-y-4">
@@ -51,7 +50,6 @@ export default function Collections() {
   const [filteredItems, setFilteredItems] = useState<KnowledgeItem[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Search & Filter State
   const [search, setSearch] = useState("");
   const [filterType, setFilterType] = useState("all");
   const [sortOrder, setSortOrder] = useState<"newest" | "oldest" | "az" | "za">(
@@ -60,7 +58,6 @@ export default function Collections() {
   const [activeTag, setActiveTag] = useState<string | null>(null);
   const [isSearching, setIsSearching] = useState(false);
 
-  // Modal State
   const [selectedItem, setSelectedItem] = useState<KnowledgeItem | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState<Partial<KnowledgeItem>>({});
@@ -90,15 +87,13 @@ export default function Collections() {
     checkUser();
   }, []);
 
-  // 1. Keyboard Shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Focus Search on '/'
       if (e.key === "/" && document.activeElement !== searchInputRef.current) {
         e.preventDefault();
         searchInputRef.current?.focus();
       }
-      // Close Modal on 'Escape'
+
       if (e.key === "Escape") {
         setSelectedItem(null);
         setIsEditing(false);
@@ -108,12 +103,10 @@ export default function Collections() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  // 2. Load Data
   async function loadData() {
     try {
       setLoading(true);
 
-      // 1. Get session (access token)
       const {
         data: { session },
       } = await supabase.auth.getSession();
@@ -123,7 +116,6 @@ export default function Collections() {
         return;
       }
 
-      // 2. Call API with Authorization header
       const res = await fetch("/api/knowledge", {
         headers: {
           Authorization: `Bearer ${session.access_token}`,
@@ -147,19 +139,15 @@ export default function Collections() {
     loadData();
   }, []);
 
-  // 3. Filtering, Sorting & Semantic Search Logic
   useEffect(() => {
-    // A. Apply Local Filters First (Type & Tag)
     let localResult = items.filter((item) => {
       if (filterType !== "all" && item.type !== filterType) return false;
       if (activeTag && !item.tags?.includes(activeTag)) return false;
       return true;
     });
 
-    // Helper: Apply Standard Sorting (Date/A-Z)
     const applyStandardSort = (list: KnowledgeItem[]) => {
       return [...list].sort((a, b) => {
-        // Always put pinned items first
         if (a.is_pinned && !b.is_pinned) return -1;
         if (!a.is_pinned && b.is_pinned) return 1;
 
@@ -184,9 +172,7 @@ export default function Collections() {
       });
     };
 
-    // B. Semantic Search Execution
     const performSearch = async () => {
-      // 1. If search is empty, just use standard sort
       if (!search.trim()) {
         setFilteredItems(applyStandardSort(localResult));
         return;
@@ -194,7 +180,6 @@ export default function Collections() {
 
       setIsSearching(true);
       try {
-        // 2. Call Semantic Search API with the pre-filtered list
         const res = await fetch("/api/search", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -205,8 +190,6 @@ export default function Collections() {
 
         const rankedItems = await res.json();
 
-        // 3. Set items directly (AI determines the order aka "Relevance")
-        // We do NOT apply date sort here, because relevance is more important during search.
         setFilteredItems(rankedItems);
       } catch (error) {
         console.error(
@@ -214,7 +197,6 @@ export default function Collections() {
           error,
         );
 
-        // 4. Fallback to basic keyword search if API fails
         const q = search.toLowerCase();
         const fallbackResult = localResult.filter(
           (item) =>
@@ -228,15 +210,13 @@ export default function Collections() {
       }
     };
 
-    // Debounce: Wait 500ms after user stops typing to save API calls
     const timeoutId = setTimeout(performSearch, 500);
     return () => clearTimeout(timeoutId);
   }, [search, filterType, items, sortOrder, activeTag]);
 
-  // Actions
   const handlePin = async (e: React.MouseEvent, item: KnowledgeItem) => {
     e.stopPropagation();
-    // Optimistic UI Update
+
     const updatedItems = items.map((i) =>
       i.id === item.id ? { ...i, is_pinned: !i.is_pinned } : i,
     );
@@ -257,7 +237,7 @@ export default function Collections() {
       });
     } catch (err) {
       console.error("Failed to pin", err);
-      loadData(); // Revert on error
+      loadData();
     }
   };
 
@@ -265,7 +245,6 @@ export default function Collections() {
     e.stopPropagation();
     if (!confirm("Delete this memory forever?")) return;
 
-    // Optimistic Delete
     setItems(items.filter((i) => i.id !== id));
 
     try {
@@ -288,7 +267,6 @@ export default function Collections() {
     if (!selectedItem) return;
 
     try {
-      // 1. Get access token
       const {
         data: { session },
       } = await supabase.auth.getSession();
@@ -297,7 +275,6 @@ export default function Collections() {
         throw new Error("Not authenticated");
       }
 
-      // 2. Call your API (NOT Supabase directly)
       const res = await fetch(`/api/knowledge/${selectedItem.id}`, {
         method: "PUT",
         headers: {
@@ -313,7 +290,6 @@ export default function Collections() {
 
       const updatedItem = await res.json();
 
-      // 3. Update local state
       setItems(items.map((i) => (i.id === selectedItem.id ? updatedItem : i)));
 
       setSelectedItem(updatedItem);
@@ -396,7 +372,6 @@ export default function Collections() {
         <div className="grid grid-cols-1 md:grid-cols-12 gap-4 mb-10">
           {/* Smart Semantic Search */}
           <div className="md:col-span-6 relative">
-            {/* Show Spinner when searching, otherwise show AI Sparkles */}
             {isSearching ? (
               <Loader2 className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#E5C07B] animate-spin" />
             ) : (
@@ -600,7 +575,6 @@ export default function Collections() {
         </motion.div>
       </div>
 
-      {/* ITEM DETAIL / EDIT MODAL */}
       <AnimatePresence>
         {selectedItem && (
           <motion.div

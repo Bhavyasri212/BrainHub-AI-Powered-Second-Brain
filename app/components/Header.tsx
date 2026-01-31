@@ -14,7 +14,6 @@ export default function Header() {
     <header className="fixed top-0 left-0 right-0 z-50 bg-[#0B0B0B]/80 backdrop-blur-xl border-b border-[#262626]">
       <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          {/* Logo -> Landing Page */}
           <Link href="/" className="flex items-center gap-2 group">
             <motion.div
               whileHover={{ rotate: 180 }}
@@ -28,9 +27,7 @@ export default function Header() {
             </span>
           </Link>
 
-          {/* Public Navigation Items (Always Visible) */}
           <div className="flex items-center gap-6">
-            {/* 1. Collections */}
             <Link
               href="/collections"
               className={`flex items-center gap-2 text-sm font-medium transition-colors ${
@@ -42,7 +39,7 @@ export default function Header() {
               <LayoutGrid className="w-4 h-4" />
               Collections
             </Link>
-            {/* 2. Add Knowledge (Points to /add) */}
+
             <Link
               href="/add"
               className={`flex items-center gap-2 text-sm font-medium transition-colors ${
@@ -54,7 +51,7 @@ export default function Header() {
               <PlusCircle className="w-4 h-4" />
               Add Knowledge
             </Link>
-            {/* 3. Profile */}
+
             <Link
               href="/profile"
               className={`flex items-center gap-2 text-sm font-medium transition-colors ${
@@ -67,7 +64,6 @@ export default function Header() {
               <span className="hidden sm:inline">Profile</span>
             </Link>
 
-            {/* 4. Chat AI */}
             <Link
               href="/chat"
               className={`flex items-center gap-2 text-sm font-medium transition-colors ${

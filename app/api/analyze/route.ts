@@ -14,7 +14,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // ✅ FIX: Use the exact model name that works in your knowledge route
     const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
 
     const prompt = `
@@ -37,10 +36,8 @@ export async function POST(req: Request) {
     const response = await result.response;
     const responseText = response.text();
 
-    // Clean up markdown code blocks if Gemini sends them
     const jsonStr = responseText.replace(/```json|```/g, "").trim();
 
-    // Robust JSON extraction
     const firstBrace = jsonStr.indexOf("{");
     const lastBrace = jsonStr.lastIndexOf("}");
 

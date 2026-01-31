@@ -9,9 +9,7 @@ export async function POST(req: Request) {
 
     if (!items || items.length === 0) return NextResponse.json([]);
 
-    // --- STRATEGY 1: Attempt AI Semantic Search ---
     try {
-      // Use the stable 1.5 model which often has better rate limits than experimental ones
       const model = genAI.getGenerativeModel({
         model: "gemini-2.5-flash-lite",
       });
@@ -41,14 +39,12 @@ export async function POST(req: Request) {
       const cleanJson = text.replace(/```json|```/g, "").trim();
       const rankedIds = JSON.parse(cleanJson);
 
-      // Reorder items based on AI ranking
       const sortedItems = rankedIds
         .map((id: number) => items.find((item: any) => item.id === id))
         .filter(Boolean);
 
       return NextResponse.json(sortedItems);
     } catch (aiError: any) {
-      // --- STRATEGY 2: Fallback to Keyword Search ---
       console.warn(
         "⚠️ AI Rate Limited or Failed. Switching to Keyword Search.",
       );
@@ -61,7 +57,6 @@ export async function POST(req: Request) {
           item.tags?.some((t: string) => t.toLowerCase().includes(q)),
       );
 
-      // Return the keyword results instead of crashing
       return NextResponse.json(filtered);
     }
   } catch (error) {

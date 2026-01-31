@@ -12,6 +12,8 @@ import {
   ArrowRight,
   CheckCircle2,
 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase";
 
 export default function Landing() {
   const features = [
@@ -60,6 +62,28 @@ export default function Landing() {
     "Build your second brain",
   ];
 
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    async function getUser() {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      setUser(session?.user || null);
+    }
+    getUser();
+
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        setUser(session?.user || null);
+      },
+    );
+
+    return () => {
+      authListener?.subscription?.unsubscribe();
+    };
+  }, []);
+
   return (
     <div className="min-h-screen bg-[#0B0B0B]">
       {/* Hero Section */}
@@ -100,18 +124,18 @@ export default function Landing() {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              {/* ✅ PRIMARY BUTTON: Goes to Auth if not logged in, or directly to Add */}
-              <Link
-                href="/add" /* Matches your app/add/page.tsx */
-                className="group px-8 py-4 bg-[#E5C07B] text-black font-semibold rounded-xl hover:bg-[#C9B26A] transition-all flex items-center justify-center gap-2"
-              >
-                Get Started Free
-                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-              </Link>
+              {!user && (
+                <Link
+                  href="/auth"
+                  className="group px-8 py-4 bg-[#E5C07B] text-black font-semibold rounded-xl hover:bg-[#C9B26A] transition-all flex items-center justify-center gap-2"
+                >
+                  Get Started Free
+                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                </Link>
+              )}
 
-              {/* ✅ SECONDARY BUTTON: Goes to Collections */}
               <Link
-                href="/collections" /* Matches your app/collections/page.tsx */
+                href="/collections"
                 className="px-8 py-4 bg-[#141414] border border-[#262626] text-[#F5F5F5] font-semibold rounded-xl hover:border-[#E5C07B] transition-all"
               >
                 View Collections
@@ -195,9 +219,9 @@ export default function Landing() {
             <p className="text-lg text-[#A1A1AA] mb-10">
               Join thousands of users who are already organizing their knowledge
             </p>
-            {/* ✅ BOTTOM BUTTON: Goes directly to Add Page for quick creation */}
+
             <Link
-              href="/add" /* Matches your app/add/page.tsx */
+              href="/add"
               className="inline-flex items-center gap-2 px-8 py-4 bg-[#E5C07B] text-black font-semibold rounded-xl hover:bg-[#C9B26A] transition-all"
             >
               Start Writing Now

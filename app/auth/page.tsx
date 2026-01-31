@@ -63,15 +63,12 @@ export default function AuthPage() {
 
   return (
     <div className="min-h-screen bg-[#0B0B0B] flex overflow-hidden">
-      {/* LEFT SIDE - VISUAL (Hidden on Mobile) */}
       <div className="hidden lg:flex lg:w-1/2 relative bg-[#141414] items-center justify-center p-12 overflow-hidden">
-        {/* Animated Background Elements */}
         <div className="absolute top-0 left-0 w-full h-full">
           <div className="absolute top-[-20%] left-[-20%] w-[800px] h-[800px] bg-[#E5C07B]/5 rounded-full blur-[120px]" />
           <div className="absolute bottom-[-10%] right-[-10%] w-[600px] h-[600px] bg-[#E5C07B]/10 rounded-full blur-[100px]" />
         </div>
 
-        {/* Content Overlay */}
         <div className="relative z-10 max-w-lg">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -104,7 +101,6 @@ export default function AuthPage() {
         </div>
       </div>
 
-      {/* RIGHT SIDE - FORM */}
       <div className="w-full lg:w-1/2 flex flex-col items-center justify-center p-6 sm:p-12 relative">
         <Link
           href="/"
@@ -209,7 +205,6 @@ export default function AuthPage() {
           </div>
         </div>
 
-        {/* Footer Credit */}
         <div className="absolute bottom-6 text-xs text-[#52525B]">
           Protected by Supabase Auth
         </div>

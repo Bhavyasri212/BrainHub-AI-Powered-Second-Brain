@@ -3,10 +3,8 @@ import { supabase } from "@/lib/supabase";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { createClient } from "@supabase/supabase-js";
 
-// Initialize Gemini
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
-/* GET all knowledge items */
 export async function GET(req: Request) {
   const authHeader = req.headers.get("Authorization");
 
@@ -14,7 +12,6 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "Missing Auth Token" }, { status: 401 });
   }
 
-  // Extract the Bearer token from header
   const token = authHeader.split(" ")[1];
 
   const authSupabase = createClient(
@@ -29,7 +26,6 @@ export async function GET(req: Request) {
     },
   );
 
-  // RLS will now automatically scope data to the user
   const { data, error } = await authSupabase
     .from("knowledge_items")
     .select("*")
@@ -42,12 +38,8 @@ export async function GET(req: Request) {
   return NextResponse.json(data);
 }
 
-/* POST: Create item + Generate AI Summary/Tags */
 export async function POST(req: Request) {
   try {
-    // ----------------------------------------------------------------
-    // 0. Create user-authenticated Supabase client
-    // ----------------------------------------------------------------
     const authHeader = req.headers.get("Authorization");
 
     if (!authHeader) {
@@ -69,7 +61,6 @@ export async function POST(req: Request) {
       },
     );
 
-    // Verify user
     const {
       data: { user },
       error: authError,
@@ -81,10 +72,8 @@ export async function POST(req: Request) {
 
     const body = await req.json();
 
-    // ✅ ADDED: sourceUrl
     const { title, content, type, sourceUrl } = body;
 
-    // 1. Prepare AI Prompt
     let summary = "";
     let tags: string[] = [];
 
@@ -116,7 +105,6 @@ Text to analyze:
         const response = await result.response;
         const text = response.text();
 
-        // Clean up markdown code blocks if Gemini sends them
         const cleanJson = text.replace(/```json|```/g, "").trim();
         const aiData = JSON.parse(cleanJson);
 
@@ -129,7 +117,6 @@ Text to analyze:
       }
     }
 
-    // 2. Insert into Supabase with AI data
     const { data, error } = await authSupabase
       .from("knowledge_items")
       .insert([

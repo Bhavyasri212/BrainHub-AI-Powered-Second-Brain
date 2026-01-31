@@ -16,13 +16,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="bg-[#0B0B0B] text-white antialiased flex flex-col min-h-screen">
-        {/* 1. The Header/Navbar stays here and shows on every page */}
         <Header />
 
-        {/* 2. Main Content Area (This handles the <Routes> part automatically) */}
         <main className="flex-1 pt-16">{children}</main>
 
-        {/* 3. Footer stays here */}
         <Footer />
       </body>
     </html>

@@ -14,9 +14,6 @@ import {
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 
-// 📦 NOTE: To enable Markdown, you would run: npm install react-markdown
-// import ReactMarkdown from "react-markdown";
-
 interface Message {
   role: "user" | "assistant";
   content: string;
@@ -34,7 +31,6 @@ export default function ChatPage() {
   ]);
   const [loading, setLoading] = useState(false);
 
-  // State for copy feedback
   const [copiedId, setCopiedId] = useState<number | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -45,18 +41,14 @@ export default function ChatPage() {
 
     if (!textToSend.trim()) return;
 
-    // 1. Create the new user message object
     const userMsg: Message = { role: "user", content: textToSend };
 
-    // 2. Optimistically update UI
     const newHistory = [...messages, userMsg];
     setMessages(newHistory);
     setInput("");
     setLoading(true);
 
     try {
-      // 3. Send the entire history
-      // Get the current session and access token
       const session = await supabase.auth.getSession();
       const access_token = session.data?.session?.access_token;
 
@@ -92,14 +84,12 @@ export default function ChatPage() {
     }
   };
 
-  // Feature: Copy to Clipboard
   const handleCopy = (content: string, idx: number) => {
     navigator.clipboard.writeText(content);
     setCopiedId(idx);
     setTimeout(() => setCopiedId(null), 2000);
   };
 
-  // Feature: Quick Prompts
   const quickPrompts = [
     "Summarize my recent notes",
     "Find connections between ideas",
@@ -108,14 +98,15 @@ export default function ChatPage() {
 
   return (
     <div className="min-h-screen bg-[#0B0B0B] pt-24 pb-6 px-4 sm:px-6 lg:px-8 flex flex-col">
-      {/* Header */}
       <div className="max-w-4xl mx-auto w-full mb-6 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-gradient-to-br from-[#E5C07B] to-[#C9B26A] rounded-xl flex items-center justify-center shadow-lg shadow-[#E5C07B]/20">
             <Bot className="w-6 h-6 text-black" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-[#F5F5F5]">Brain Chat</h1>
+            <h1 className="text-2xl font-bold text-[#F5F5F5]">
+              Knowledge Vault Chat
+            </h1>
             <p className="text-xs text-[#A1A1AA]">Powered by Gemini 2.0</p>
           </div>
         </div>
@@ -127,9 +118,7 @@ export default function ChatPage() {
         </button>
       </div>
 
-      {/* Chat Container */}
       <div className="flex-1 max-w-4xl mx-auto w-full bg-[#141414] border border-[#262626] rounded-3xl overflow-hidden flex flex-col shadow-2xl relative">
-        {/* Messages Area */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-thin scrollbar-thumb-[#262626] scrollbar-track-transparent">
           <AnimatePresence>
             {messages.map((msg, idx) => (
@@ -162,7 +151,6 @@ export default function ChatPage() {
                     <div className="whitespace-pre-wrap">{msg.content}</div>
                   </div>
 
-                  {/* ✅ Feature: Copy Button (Only for Assistant) */}
                   {msg.role === "assistant" && (
                     <button
                       onClick={() => handleCopy(msg.content, idx)}
@@ -191,7 +179,6 @@ export default function ChatPage() {
                 <Bot className="w-4 h-4 text-[#E5C07B]" />
               </div>
               <div className="flex items-center gap-3 h-10 px-4 bg-[#141414] border border-[#262626] rounded-2xl">
-                {/* ✅ Feature: Enhanced Typing Indicator */}
                 <div className="flex gap-1">
                   <span className="w-1.5 h-1.5 bg-[#E5C07B] rounded-full animate-bounce [animation-delay:-0.3s]"></span>
                   <span className="w-1.5 h-1.5 bg-[#E5C07B] rounded-full animate-bounce [animation-delay:-0.15s]"></span>
@@ -206,9 +193,7 @@ export default function ChatPage() {
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Input Area */}
         <div className="p-4 border-t border-[#262626] bg-[#0B0B0B]/50 backdrop-blur-md">
-          {/* ✅ Feature: Quick Chips */}
           {messages.length < 3 && (
             <div className="flex gap-2 mb-3 overflow-x-auto pb-1 scrollbar-hide">
               {quickPrompts.map((prompt, i) => (

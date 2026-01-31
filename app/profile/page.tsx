@@ -11,8 +11,8 @@ import {
   Lightbulb,
   Sparkles,
 } from "lucide-react";
-import { supabase } from "@/lib/supabase"; // ✅ Standard Next.js alias
-import { useRouter } from "next/navigation"; // ✅ Next.js Router
+import { supabase } from "@/lib/supabase";
+import { useRouter } from "next/navigation";
 
 export default function Profile() {
   const [user, setUser] = useState<any>(null);
@@ -23,7 +23,7 @@ export default function Profile() {
     insights: 0,
   });
   const [loading, setLoading] = useState(true);
-  const router = useRouter(); // ✅ Next.js Router instance
+  const router = useRouter();
 
   useEffect(() => {
     loadProfile();
@@ -41,7 +41,6 @@ export default function Profile() {
       }
       setUser(authUser);
 
-      // 2. Fetch Stats
       const { data: items, error } = await supabase
         .from("knowledge_items")
         .select("type")
@@ -92,10 +91,8 @@ export default function Profile() {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
 
-      // Optional: reset user state
       setUser(null);
 
-      // Redirect to auth page
       router.push("/auth");
     } catch (error: any) {
       alert(error.message);
@@ -107,14 +104,12 @@ export default function Profile() {
   return (
     <div className="min-h-screen bg-[#0B0B0B] py-12 pt-24">
       {" "}
-      {/* Added pt-24 for Navbar space */}
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          {/* User Header Card */}
           <div className="bg-[#141414] border border-[#262626] rounded-2xl p-8 mb-8">
             <div className="flex items-start gap-6">
               <div className="w-20 h-20 bg-gradient-to-br from-[#E5C07B] to-[#C9B26A] rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg shadow-[#E5C07B]/20">
@@ -149,7 +144,6 @@ export default function Profile() {
             </div>
           </div>
 
-          {/* Stats Section */}
           <div className="mb-8">
             <h2 className="text-2xl font-bold text-[#F5F5F5] mb-4">
               Knowledge Statistics
@@ -194,7 +188,6 @@ export default function Profile() {
             </div>
           </div>
 
-          {/* Account Settings */}
           <div className="bg-[#141414] border border-[#262626] rounded-2xl p-8">
             <h2 className="text-2xl font-bold text-[#F5F5F5] mb-4">
               Account Settings

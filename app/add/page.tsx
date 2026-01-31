@@ -38,7 +38,6 @@ export default function AddKnowledgePage() {
     sourceUrl: "",
   });
 
-  // 6️⃣ Draft Autosave: Load on mount
   useEffect(() => {
     const saved = localStorage.getItem("draft");
     if (saved) {
@@ -50,22 +49,19 @@ export default function AddKnowledgePage() {
     }
   }, []);
 
-  // 6️⃣ Draft Autosave: Save on change
   useEffect(() => {
     localStorage.setItem("draft", JSON.stringify(formData));
   }, [formData]);
 
-  // 5️⃣ Keyboard Shortcuts
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      // Cmd/Ctrl + Enter to Submit
       if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
         e.preventDefault();
-        // Trigger submit logic manually if needed, or focus submit button
+
         const form = document.querySelector("form");
         if (form) form.requestSubmit();
       }
-      // Esc to Cancel/Back
+
       if (e.key === "Escape") {
         if (showPreview) setShowPreview(false);
         else router.back();
@@ -87,13 +83,11 @@ export default function AddKnowledgePage() {
     checkSession();
   }, []);
 
-  // 1️⃣ Auto-fetch content logic (Mock implementation)
   const handleFetchUrl = async () => {
     if (!formData.sourceUrl) return;
     setFetching(true);
 
     try {
-      // Call our new scraper API
       const res = await fetch("/api/fetch-url", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -104,12 +98,11 @@ export default function AddKnowledgePage() {
 
       const data = await res.json();
 
-      // Update Form with Real Data
       setFormData((prev) => ({
         ...prev,
         title: data.title || prev.title,
         content: data.content || prev.content,
-        // Auto-switch type to 'link' if it isn't already
+
         type: "link",
       }));
     } catch (error) {
@@ -125,11 +118,9 @@ export default function AddKnowledgePage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // 4️⃣ AI Preview Mode Interception (REAL IMPLEMENTATION)
     if (!showPreview) {
       setLoading(true);
       try {
-        // Call the new Analyze API
         const res = await fetch("/api/analyze", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -140,12 +131,10 @@ export default function AddKnowledgePage() {
         });
 
         if (!res.ok) {
-          // ✅ Throw the specific error from the backend
           const data = await res.json();
           throw new Error(data.error || "Analysis failed");
         }
         const data = await res.json();
-        // Update state with Real AI Data
         setAiPreviewData({
           summary: data.summary,
           tags: data.tags,
@@ -161,17 +150,14 @@ export default function AddKnowledgePage() {
       return;
     }
 
-    // --- ACTUAL SAVE LOGIC ---
     setLoading(true);
     try {
-      // We merge manual tags with AI tags
       const manualTags = formData.tags
         .split(",")
         .map((t) => t.trim())
         .filter(Boolean);
       const combinedTags = [...new Set([...manualTags, ...aiPreviewData.tags])];
 
-      // 1. Get the current session token
       const {
         data: { session },
       } = await supabase.auth.getSession();
@@ -212,7 +198,6 @@ export default function AddKnowledgePage() {
     }
   };
 
-  // 7️⃣ Dynamic Placeholders
   const contentPlaceholder =
     formData.type === "link"
       ? "Paste key takeaways from the article or fetch content automatically..."
@@ -249,7 +234,6 @@ export default function AddKnowledgePage() {
   return (
     <div className="min-h-screen bg-[#0B0B0B] pt-24 pb-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-3xl mx-auto">
-        {/* Back Button */}
         <button
           type="button"
           onClick={() => router.back()}
@@ -264,7 +248,6 @@ export default function AddKnowledgePage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          {/* Header Section */}
           <div className="text-center mb-10">
             <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-[#E5C07B] to-[#C9B26A] rounded-2xl mb-4 shadow-lg shadow-[#E5C07B]/20">
               <Sparkles className="w-8 h-8 text-black" />
@@ -277,10 +260,8 @@ export default function AddKnowledgePage() {
             </p>
           </div>
 
-          {/* Main Form Card */}
           <div className="bg-[#141414] border border-[#262626] rounded-3xl p-8 md:p-10 shadow-2xl relative overflow-hidden">
             <form onSubmit={handleSubmit} className="space-y-8">
-              {/* Type Selection */}
               <div className="space-y-2">
                 <label className="text-sm font-medium text-[#A1A1AA] block mb-2">
                   Format
@@ -305,13 +286,12 @@ export default function AddKnowledgePage() {
                 </div>
               </div>
 
-              {/* Title Input */}
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
                   <label className="flex items-center gap-2 text-sm font-medium text-[#E5C07B]">
                     <Type className="w-4 h-4" /> Title
                   </label>
-                  {/* 3️⃣ Live Character Counter */}
+
                   <span className="text-xs text-[#52525B]">
                     {formData.title.length} chars
                   </span>
@@ -327,12 +307,10 @@ export default function AddKnowledgePage() {
                 />
               </div>
 
-              {/* Source URL Input */}
               <div className="space-y-2">
                 <div className="flex justify-between">
                   <label className="flex items-center gap-2 text-sm font-medium text-[#E5C07B]">
                     <LinkIcon className="w-4 h-4" /> Source URL
-                    {/* 2️⃣ Smart Type Switching Helper */}
                     {formData.type === "link" && (
                       <span className="text-[#A1A1AA] text-xs ml-1">
                         (Required)
@@ -348,7 +326,6 @@ export default function AddKnowledgePage() {
                 <div className="relative">
                   <input
                     type="url"
-                    // 2️⃣ Smart Type Switching Validation
                     required={formData.type === "link"}
                     value={formData.sourceUrl}
                     onChange={(e) =>
@@ -357,7 +334,7 @@ export default function AddKnowledgePage() {
                     className="w-full pl-4 pr-24 py-3 bg-[#0B0B0B] border border-[#262626] rounded-xl text-[#F5F5F5] placeholder-[#52525B] focus:ring-2 focus:ring-[#E5C07B] outline-none transition-all"
                     placeholder="https://example.com/article"
                   />
-                  {/* 1️⃣ Auto-fetch Button */}
+
                   <button
                     type="button"
                     onClick={handleFetchUrl}
@@ -372,7 +349,7 @@ export default function AddKnowledgePage() {
                     Fetch
                   </button>
                 </div>
-                {/* 2️⃣ Smart Type Switching Warning */}
+
                 {formData.type === "link" && !formData.sourceUrl && (
                   <p className="text-xs text-[#E5C07B]/80">
                     Link items must include a source URL.
@@ -380,13 +357,12 @@ export default function AddKnowledgePage() {
                 )}
               </div>
 
-              {/* Content Textarea */}
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
                   <label className="flex items-center gap-2 text-sm font-medium text-[#E5C07B]">
                     <AlignLeft className="w-4 h-4" /> Content
                   </label>
-                  {/* 3️⃣ Live Character Counter */}
+
                   <span className="text-xs text-[#52525B]">
                     {formData.content.length} chars
                   </span>
@@ -399,12 +375,10 @@ export default function AddKnowledgePage() {
                     setFormData({ ...formData, content: e.target.value })
                   }
                   className="w-full px-4 py-4 bg-[#0B0B0B] border border-[#262626] rounded-xl text-[#F5F5F5] placeholder-[#52525B] focus:ring-2 focus:ring-[#E5C07B] focus:border-transparent outline-none resize-none transition-all leading-relaxed"
-                  // 7️⃣ Dynamic Placeholder
                   placeholder={contentPlaceholder}
                 />
               </div>
 
-              {/* Tags Input */}
               <div className="space-y-2">
                 <label className="flex items-center gap-2 text-sm font-medium text-[#E5C07B]">
                   <Tag className="w-4 h-4" /> Manual Tags (Optional)
@@ -422,7 +396,6 @@ export default function AddKnowledgePage() {
                 </p>
               </div>
 
-              {/* 4️⃣ AI Preview Mode Overlay */}
               <AnimatePresence>
                 {showPreview && (
                   <motion.div
@@ -453,7 +426,6 @@ export default function AddKnowledgePage() {
                 )}
               </AnimatePresence>
 
-              {/* Action Buttons */}
               <div className="flex gap-4 pt-4 border-t border-[#262626]">
                 <button
                   type="button"

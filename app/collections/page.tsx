@@ -64,9 +64,31 @@ export default function Collections() {
   const [selectedItem, setSelectedItem] = useState<KnowledgeItem | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState<Partial<KnowledgeItem>>({});
+  const [user, setUser] = useState<any>(null);
 
   const router = useRouter();
   const searchInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const checkUser = async () => {
+      try {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+
+        if (!session?.user) {
+          setUser(null);
+        } else {
+          setUser(session.user);
+        }
+      } catch (err) {
+        console.error("Error checking auth:", err);
+        setUser(null);
+      }
+    };
+
+    checkUser();
+  }, []);
 
   // 1. Keyboard Shortcuts
   useEffect(() => {
@@ -90,11 +112,29 @@ export default function Collections() {
   async function loadData() {
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from("knowledge_items")
-        .select("*");
 
-      if (error) throw error;
+      // 1. Get session (access token)
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!session?.access_token) {
+        setLoading(false);
+        return;
+      }
+
+      // 2. Call API with Authorization header
+      const res = await fetch("/api/knowledge", {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to fetch knowledge items");
+      }
+
+      const data = await res.json();
       setItems(data || []);
     } catch (error) {
       console.error("Error loading data:", error);
@@ -203,10 +243,18 @@ export default function Collections() {
     setItems(updatedItems);
 
     try {
-      await supabase
-        .from("knowledge_items")
-        .update({ is_pinned: !item.is_pinned })
-        .eq("id", item.id);
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      await fetch(`/api/knowledge/${item.id}`, {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${session?.access_token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ is_pinned: !item.is_pinned }),
+      });
     } catch (err) {
       console.error("Failed to pin", err);
       loadData(); // Revert on error
@@ -221,7 +269,16 @@ export default function Collections() {
     setItems(items.filter((i) => i.id !== id));
 
     try {
-      await supabase.from("knowledge_items").delete().eq("id", id);
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      await fetch(`/api/knowledge/${id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${session?.access_token}`,
+        },
+      });
     } catch (err) {
       loadData();
     }
@@ -229,23 +286,40 @@ export default function Collections() {
 
   const handleUpdate = async () => {
     if (!selectedItem) return;
+
     try {
-      const { error } = await supabase
-        .from("knowledge_items")
-        .update(editForm)
-        .eq("id", selectedItem.id);
+      // 1. Get access token
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
 
-      if (error) throw error;
+      if (!session?.access_token) {
+        throw new Error("Not authenticated");
+      }
 
-      // Update local state
-      setItems(
-        items.map((i) =>
-          i.id === selectedItem.id ? { ...i, ...editForm } : i,
-        ),
-      );
+      // 2. Call your API (NOT Supabase directly)
+      const res = await fetch(`/api/knowledge/${selectedItem.id}`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(editForm),
+      });
+
+      if (!res.ok) {
+        throw new Error("Update failed");
+      }
+
+      const updatedItem = await res.json();
+
+      // 3. Update local state
+      setItems(items.map((i) => (i.id === selectedItem.id ? updatedItem : i)));
+
+      setSelectedItem(updatedItem);
       setIsEditing(false);
-      setSelectedItem({ ...selectedItem, ...editForm } as KnowledgeItem);
     } catch (error) {
+      console.error("Failed to update item:", error);
       alert("Failed to update item");
     }
   };
@@ -265,6 +339,26 @@ export default function Collections() {
         return <FileText className="w-4 h-4 text-[#E5C07B]" />;
     }
   };
+
+  if (user === null) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[#0B0B0B] text-center px-4">
+        <Sparkles className="w-16 h-16 text-[#E5C07B] mb-6" />
+        <h1 className="text-3xl text-[#F5F5F5] font-bold mb-2">
+          Login or Signup to view your collections
+        </h1>
+        <p className="text-[#A1A1AA] mb-6">
+          You need an account to access your personal knowledge collections.
+        </p>
+        <button
+          onClick={() => router.push("/auth")}
+          className="bg-[#E5C07B] text-black px-6 py-3 rounded-xl font-semibold hover:bg-[#C9B26A] transition-all"
+        >
+          Go to Login / Signup
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#0B0B0B] pb-32 pt-10">

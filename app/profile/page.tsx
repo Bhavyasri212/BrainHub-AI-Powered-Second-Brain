@@ -31,34 +31,25 @@ export default function Profile() {
 
   async function loadProfile() {
     try {
-      // 1. Check Auth (Optional: You can remove this check if you haven't set up Auth yet)
       const {
         data: { user: authUser },
       } = await supabase.auth.getUser();
 
-      /* // Uncomment this if you have real Supabase Auth working
       if (!authUser) {
-        router.push('/auth');
+        router.push("/auth");
         return;
       }
-      setUser(authUser); 
-      */
-
-      // Mock User for the Assignment (Since we are likely anonymous)
-      if (!authUser) {
-        setUser({
-          email: "guest@altibbe.demo",
-          created_at: new Date().toISOString(),
-          id: "guest-123-456",
-        });
-      } else {
-        setUser(authUser);
-      }
+      setUser(authUser);
 
       // 2. Fetch Stats
-      const { data: items } = await supabase
+      const { data: items, error } = await supabase
         .from("knowledge_items")
-        .select("type");
+        .select("type")
+        .eq("user_id", authUser.id);
+
+      if (error) {
+        console.error("Error fetching user items:", error);
+      }
 
       if (items) {
         setStats({
@@ -95,6 +86,23 @@ export default function Profile() {
       color: "#E5C07B",
     },
   ];
+  const handleLogout = async () => {
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+
+      // Optional: reset user state
+      setUser(null);
+
+      // Redirect to auth page
+      router.push("/auth");
+    } catch (error: any) {
+      alert(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#0B0B0B] py-12 pt-24">
@@ -186,7 +194,7 @@ export default function Profile() {
             </div>
           </div>
 
-          {/* Account Settings (Static for Demo) */}
+          {/* Account Settings */}
           <div className="bg-[#141414] border border-[#262626] rounded-2xl p-8">
             <h2 className="text-2xl font-bold text-[#F5F5F5] mb-4">
               Account Settings
@@ -209,6 +217,20 @@ export default function Profile() {
               <div className="p-4 bg-[#0B0B0B] border border-[#262626] rounded-xl">
                 <h3 className="text-[#F5F5F5] font-semibold mb-1">User ID</h3>
                 <p className="text-sm text-[#A1A1AA] font-mono">{user.id}</p>
+              </div>
+
+              <div className="mt-6 flex justify-center">
+                <button
+                  onClick={handleLogout}
+                  disabled={loading}
+                  className="w-full sm:w-auto px-6 py-3 bg-red-600 text-white font-bold rounded-xl hover:bg-red-700 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
+                >
+                  {loading ? (
+                    <span className="animate-pulse">Logging out...</span>
+                  ) : (
+                    "Logout"
+                  )}
+                </button>
               </div>
             </div>
           </div>

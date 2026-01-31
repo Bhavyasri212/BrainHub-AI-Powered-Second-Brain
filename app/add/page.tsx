@@ -17,18 +17,19 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { KnowledgeType } from "../types";
+import { supabase } from "@/lib/supabase";
 
 export default function AddKnowledgePage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [fetching, setFetching] = useState(false); // 1️⃣ For Fetch Button
-  const [showPreview, setShowPreview] = useState(false); // 4️⃣ For AI Preview
+  const [fetching, setFetching] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
   const [aiPreviewData, setAiPreviewData] = useState({
     summary: "",
     tags: [] as string[],
   });
-
-  // ✅ UPDATE: Added sourceUrl to state
+  const [user, setUser] = useState<any>(null);
+  const [authLoading, setAuthLoading] = useState(true);
   const [formData, setFormData] = useState({
     title: "",
     content: "",
@@ -73,6 +74,18 @@ export default function AddKnowledgePage() {
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, [router, showPreview]);
+
+  useEffect(() => {
+    const checkSession = async () => {
+      setAuthLoading(true);
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      setUser(session?.user ?? null);
+      setAuthLoading(false);
+    };
+    checkSession();
+  }, []);
 
   // 1️⃣ Auto-fetch content logic (Mock implementation)
   const handleFetchUrl = async () => {
@@ -158,18 +171,35 @@ export default function AddKnowledgePage() {
         .filter(Boolean);
       const combinedTags = [...new Set([...manualTags, ...aiPreviewData.tags])];
 
+      // 1. Get the current session token
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!session) {
+        alert("You must be logged in to save.");
+        setLoading(false);
+        return;
+      }
+
       const res = await fetch("/api/knowledge", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+
         body: JSON.stringify({
           ...formData,
           tags: combinedTags,
-          // Pass the AI summary we just previewed so the backend uses it
           summary: aiPreviewData.summary,
         }),
       });
 
-      if (!res.ok) throw new Error("Failed to save knowledge");
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to save knowledge");
+      }
 
       localStorage.removeItem("draft");
       router.push("/collections");
@@ -187,6 +217,34 @@ export default function AddKnowledgePage() {
     formData.type === "link"
       ? "Paste key takeaways from the article or fetch content automatically..."
       : "Pour your thoughts here...";
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-[#A1A1AA]">
+        <Loader2 className="w-6 h-6 animate-spin mr-2" /> Checking
+        authentication...
+      </div>
+    );
+  }
+
+  if (user === null) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[#0B0B0B] text-center px-4">
+        <Sparkles className="w-16 h-16 text-[#E5C07B] mb-6" />
+        <h1 className="text-3xl text-[#F5F5F5] font-bold mb-2">
+          Login or Signup to add knowledge
+        </h1>
+        <p className="text-[#A1A1AA] mb-6">
+          You need an account to add and manage your personal knowledge.
+        </p>
+        <button
+          onClick={() => router.push("/auth")}
+          className="bg-[#E5C07B] text-black px-6 py-3 rounded-xl font-semibold hover:bg-[#C9B26A] transition-all"
+        >
+          Go to Login / Signup
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#0B0B0B] pt-24 pb-12 px-4 sm:px-6 lg:px-8">

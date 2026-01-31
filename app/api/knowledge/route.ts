@@ -1,13 +1,36 @@
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { createClient } from "@supabase/supabase-js";
 
 // Initialize Gemini
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
 /* GET all knowledge items */
-export async function GET() {
-  const { data, error } = await supabase
+export async function GET(req: Request) {
+  const authHeader = req.headers.get("Authorization");
+
+  if (!authHeader) {
+    return NextResponse.json({ error: "Missing Auth Token" }, { status: 401 });
+  }
+
+  // Extract the Bearer token from header
+  const token = authHeader.split(" ")[1];
+
+  const authSupabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      global: {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    },
+  );
+
+  // RLS will now automatically scope data to the user
+  const { data, error } = await authSupabase
     .from("knowledge_items")
     .select("*")
     .order("created_at", { ascending: false });
@@ -22,6 +45,40 @@ export async function GET() {
 /* POST: Create item + Generate AI Summary/Tags */
 export async function POST(req: Request) {
   try {
+    // ----------------------------------------------------------------
+    // 0. Create user-authenticated Supabase client
+    // ----------------------------------------------------------------
+    const authHeader = req.headers.get("Authorization");
+
+    if (!authHeader) {
+      return NextResponse.json(
+        { error: "Missing Auth Token" },
+        { status: 401 },
+      );
+    }
+
+    const authSupabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        global: {
+          headers: {
+            Authorization: authHeader,
+          },
+        },
+      },
+    );
+
+    // Verify user
+    const {
+      data: { user },
+      error: authError,
+    } = await authSupabase.auth.getUser();
+
+    if (!user || authError) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const body = await req.json();
 
     // ✅ ADDED: sourceUrl
@@ -73,7 +130,7 @@ Text to analyze:
     }
 
     // 2. Insert into Supabase with AI data
-    const { data, error } = await supabase
+    const { data, error } = await authSupabase
       .from("knowledge_items")
       .insert([
         {
@@ -82,13 +139,8 @@ Text to analyze:
           type,
           summary,
           tags,
-
-          // ✅ ADDED: sourceUrl (snake_case if your DB uses it)
-          // If column name is camelCase:
           sourceUrl: sourceUrl || null,
-
-          // If column name is snake_case, use instead:
-          // source_url: sourceUrl || null,
+          user_id: user.id,
         },
       ])
       .select();

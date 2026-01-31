@@ -33,15 +33,18 @@ export default function AuthPage() {
 
     try {
       if (isSignUp) {
+        let redirectTo = "";
+        if (typeof window !== "undefined") {
+          redirectTo = `${window.location.origin}/auth/callback`;
+        }
+
         const { error } = await supabase.auth.signUp({
           email,
           password,
-          options: {
-            emailRedirectTo: `${location.origin}/auth/callback`,
-          },
+          options: { emailRedirectTo: redirectTo },
         });
         if (error) throw error;
-        alert("Check your email for the confirmation link!");
+        alert("Account created successfully!");
       } else {
         const { error } = await supabase.auth.signInWithPassword({
           email,
@@ -136,10 +139,11 @@ export default function AuthPage() {
                 </label>
                 <div className="relative group">
                   <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#52525B] group-focus-within:text-[#E5C07B] transition-colors" />
+
                   <input
                     type="email"
                     required
-                    value={email}
+                    value={email || ""}
                     onChange={(e) => setEmail(e.target.value)}
                     className="w-full bg-[#141414] border border-[#262626] rounded-xl py-4 pl-12 pr-4 text-[#F5F5F5] placeholder-[#52525B] focus:ring-2 focus:ring-[#E5C07B] focus:border-transparent outline-none transition-all"
                     placeholder="name@example.com"
@@ -156,7 +160,7 @@ export default function AuthPage() {
                   <input
                     type="password"
                     required
-                    value={password}
+                    value={password || ""}
                     onChange={(e) => setPassword(e.target.value)}
                     className="w-full bg-[#141414] border border-[#262626] rounded-xl py-4 pl-12 pr-4 text-[#F5F5F5] placeholder-[#52525B] focus:ring-2 focus:ring-[#E5C07B] focus:border-transparent outline-none transition-all"
                     placeholder="••••••••"
@@ -198,9 +202,9 @@ export default function AuthPage() {
           <div className="mt-6 p-4 bg-[#1A1A1A] border border-[#262626] rounded-xl text-center">
             <p className="text-xs text-[#A1A1AA] mb-2">For Demo Access:</p>
             <div className="flex justify-center gap-4 text-xs font-mono text-[#E5C07B]">
-              <span>demo@example.com</span>
+              <span>demo@gmail.com</span>
               <span>•</span>
-              <span>password123</span>
+              <span>123456</span>
             </div>
           </div>
         </div>

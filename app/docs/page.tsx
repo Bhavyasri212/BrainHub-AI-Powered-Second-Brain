@@ -139,7 +139,7 @@ export default function Docs() {
               System Architecture
             </span>
           </div>
-          <h1 className="text-5xl font-bold text-[#F5F5F5] mb-6 tracking-tight">
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-[#F5F5F5] mb-6 tracking-tight">
             How KnowledgeVault <span className="text-[#E5C07B]">Works</span>
           </h1>
           <p className="text-xl text-[#A1A1AA] max-w-2xl leading-relaxed">
@@ -152,7 +152,7 @@ export default function Docs() {
         {/* Content Tabs */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
           {/* Sidebar Navigation */}
-          <div className="lg:col-span-3 space-y-2 sticky top-24 self-start">
+          <div className="lg:col-span-3 grid grid-cols-2 sm:grid-cols-4 lg:flex lg:flex-col gap-2 lg:space-y-2 sticky top-24 self-start mb-8 lg:mb-0">
             {[
               { id: "portable", icon: Box, label: "Portable Architecture" },
               { id: "ux", icon: Layers, label: "Principles-Based UX" },
@@ -206,7 +206,7 @@ export default function Docs() {
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: i * 0.1 }}
-                        className="flex items-center gap-6 p-6 bg-[#141414] border border-[#262626] rounded-2xl relative overflow-hidden group hover:border-[#E5C07B]/50 transition-colors"
+                        className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 p-6 bg-[#141414] border border-[#262626] rounded-2xl relative overflow-hidden group hover:border-[#E5C07B]/50 transition-colors"
                       >
                         <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#E5C07B] opacity-0 group-hover:opacity-100 transition-opacity" />
                         <div className="p-3 bg-[#0B0B0B] rounded-lg border border-[#262626] group-hover:border-[#E5C07B]/30 transition-colors">
@@ -534,8 +534,8 @@ export default function Docs() {
                           key={i}
                           className="p-4 bg-[#0B0B0B] rounded-lg border border-[#262626] font-mono text-sm"
                         >
-                          <div className="flex items-center justify-between mb-2">
-                            <div className="flex items-center gap-3">
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-2 gap-2">
+                            <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                               <span className="text-[#E5C07B] font-bold">
                                 {api.endpoint.split(" ")[0]}
                               </span>

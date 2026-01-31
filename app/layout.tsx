@@ -6,6 +6,10 @@ import Footer from "./components/Footer";
 export const metadata: Metadata = {
   title: "BrainHub - Second Brain",
   description: "AI-Powered Knowledge Management",
+  viewport: {
+    width: "device-width",
+    initialScale: 1,
+  },
 };
 
 export default function RootLayout({

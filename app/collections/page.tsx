@@ -217,6 +217,8 @@ export default function Collections() {
   const handlePin = async (e: React.MouseEvent, item: KnowledgeItem) => {
     e.stopPropagation();
 
+    const previousItems = items;
+
     const updatedItems = items.map((i) =>
       i.id === item.id ? { ...i, is_pinned: !i.is_pinned } : i,
     );
@@ -227,7 +229,7 @@ export default function Collections() {
         data: { session },
       } = await supabase.auth.getSession();
 
-      await fetch(`/api/knowledge/${item.id}`, {
+      const res = await fetch(`/api/knowledge/${item.id}`, {
         method: "PATCH",
         headers: {
           Authorization: `Bearer ${session?.access_token}`,
@@ -235,9 +237,15 @@ export default function Collections() {
         },
         body: JSON.stringify({ is_pinned: !item.is_pinned }),
       });
+
+      if (!res.ok) {
+        throw new Error("Failed to pin item");
+      }
     } catch (err) {
       console.error("Failed to pin", err);
-      loadData();
+
+      setItems(previousItems);
+      alert("Could not update pin. Please try again.");
     }
   };
 
@@ -245,6 +253,7 @@ export default function Collections() {
     e.stopPropagation();
     if (!confirm("Delete this memory forever?")) return;
 
+    const previousItems = items;
     setItems(items.filter((i) => i.id !== id));
 
     try {
@@ -252,14 +261,21 @@ export default function Collections() {
         data: { session },
       } = await supabase.auth.getSession();
 
-      await fetch(`/api/knowledge/${id}`, {
+      const res = await fetch(`/api/knowledge/${id}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${session?.access_token}`,
         },
       });
+
+      if (!res.ok) {
+        throw new Error("Failed to delete");
+      }
     } catch (err) {
-      loadData();
+      console.error("Delete failed:", err);
+
+      setItems(previousItems);
+      alert("Could not delete item. Please try again.");
     }
   };
 
@@ -276,7 +292,7 @@ export default function Collections() {
       }
 
       const res = await fetch(`/api/knowledge/${selectedItem.id}`, {
-        method: "PUT",
+        method: "PATCH",
         headers: {
           Authorization: `Bearer ${session.access_token}`,
           "Content-Type": "application/json",
@@ -284,22 +300,22 @@ export default function Collections() {
         body: JSON.stringify(editForm),
       });
 
-      if (!res.ok) {
-        throw new Error("Update failed");
-      }
+      if (!res.ok) throw new Error("Update failed");
 
       const updatedItem = await res.json();
 
-      setItems(items.map((i) => (i.id === selectedItem.id ? updatedItem : i)));
+      const finalItem = updatedItem.id
+        ? updatedItem
+        : { ...selectedItem, ...editForm };
 
-      setSelectedItem(updatedItem);
+      setItems(items.map((i) => (i.id === selectedItem.id ? finalItem : i)));
+      setSelectedItem(finalItem);
       setIsEditing(false);
     } catch (error) {
       console.error("Failed to update item:", error);
       alert("Failed to update item");
     }
   };
-
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
     alert("Copied to clipboard!");
